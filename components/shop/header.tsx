@@ -43,9 +43,9 @@ export function ShopHeader() {
           <Button variant="ghost" size="icon" asChild className="relative">
             <Link href="/cart">
               <ShoppingCart className="h-5 w-5" />
-              {totalItems() > 0 && (
+              {totalItems > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                  {totalItems()}
+                  {totalItems}
                 </span>
               )}
             </Link>
