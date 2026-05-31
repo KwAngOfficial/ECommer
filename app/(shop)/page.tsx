@@ -1,20 +1,24 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { fetchActiveProducts } from "@/lib/data/products";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { ProductCard } from "@/components/shop/product-card";
+import { SetupBanner } from "@/components/shop/setup-banner";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/types/database";
 
 export default async function HomePage() {
-  const supabase = await createClient();
-  const { data: products } = await supabase
-    .from("products")
-    .select("*, product_images(*)")
-    .eq("is_active", true)
-    .order("created_at", { ascending: false })
-    .limit(8);
+  const configured = isSupabaseConfigured();
+  const { products, error } = configured
+    ? await fetchActiveProducts(8)
+    : { products: [], error: "NOT_CONFIGURED" };
 
   return (
     <div>
+      {error === "NOT_CONFIGURED" && <SetupBanner />}
+      {error && error !== "NOT_CONFIGURED" && (
+        <SetupBanner message={`Lỗi database: ${error}. Kiểm tra đã chạy migration SQL trên Supabase chưa.`} />
+      )}
+
       <section className="bg-gradient-to-br from-primary/10 to-primary/5 py-16">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
@@ -36,7 +40,7 @@ export default async function HomePage() {
             <Link href="/products">Xem tất cả</Link>
           </Button>
         </div>
-        {products && products.length > 0 ? (
+        {products.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {(products as Product[]).map((product) => (
               <ProductCard key={product.id} product={product} />
@@ -44,7 +48,7 @@ export default async function HomePage() {
           </div>
         ) : (
           <div className="rounded-lg border border-dashed p-12 text-center text-muted-foreground">
-            <p>Chưa có sản phẩm. Admin có thể thêm sản phẩm tại /admin/products</p>
+            <p>Chưa có sản phẩm. Admin có thể thêm tại /admin/products</p>
           </div>
         )}
       </section>

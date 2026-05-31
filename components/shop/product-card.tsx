@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,12 +34,11 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md">
         <div className="relative aspect-square bg-muted">
           {imageUrl ? (
-            <Image
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
               src={imageUrl}
               alt={product.name}
-              fill
-              className="object-cover transition-transform group-hover:scale-105"
-              sizes="(max-width: 768px) 50vw, 25vw"
+              className="h-full w-full object-cover transition-transform group-hover:scale-105"
             />
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">

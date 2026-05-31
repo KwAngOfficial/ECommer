@@ -1,5 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
+import { fetchActiveProducts, fetchCategories } from "@/lib/data/products";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { ProductCard } from "@/components/shop/product-card";
+import { SetupBanner } from "@/components/shop/setup-banner";
 import type { Product } from "@/types/database";
 
 export const metadata = { title: "Sản phẩm | ECommer" };
@@ -10,22 +12,32 @@ export default async function ProductsPage({
   searchParams: Promise<{ q?: string; category?: string }>;
 }) {
   const { q, category } = await searchParams;
-  const supabase = await createClient();
 
-  let query = supabase
-    .from("products")
-    .select("*, product_images(*), categories(name)")
-    .eq("is_active", true)
-    .order("created_at", { ascending: false });
+  if (!isSupabaseConfigured()) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <SetupBanner />
+        <h1 className="mt-8 text-3xl font-bold">Sản phẩm</h1>
+      </div>
+    );
+  }
 
-  if (q) query = query.ilike("name", `%${q}%`);
-  if (category) query = query.eq("category_id", category);
+  const { categories } = await fetchCategories();
+  const { products: allProducts, error } = await fetchActiveProducts();
 
-  const { data: products } = await query;
-  const { data: categories } = await supabase.from("categories").select("*");
+  let products = allProducts;
+  if (q) {
+    products = products.filter((p) =>
+      p.name.toLowerCase().includes(q.toLowerCase())
+    );
+  }
+  if (category) {
+    products = products.filter((p) => p.category_id === category);
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {error && <SetupBanner message={`Lỗi database: ${error}`} />}
       <h1 className="mb-6 text-3xl font-bold">Sản phẩm</h1>
 
       <form className="mb-8 flex flex-wrap gap-4">
@@ -42,7 +54,9 @@ export default async function ProductsPage({
         >
           <option value="">Tất cả danh mục</option>
           {categories?.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
           ))}
         </select>
         <button
@@ -53,14 +67,14 @@ export default async function ProductsPage({
         </button>
       </form>
 
-      {products && products.length > 0 ? (
+      {products.length > 0 ? (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
           {(products as Product[]).map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
       ) : (
-        <p className="text-center text-muted-foreground py-12">
+        <p className="py-12 text-center text-muted-foreground">
           Không tìm thấy sản phẩm nào.
         </p>
       )}

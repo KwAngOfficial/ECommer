@@ -1,8 +1,9 @@
-import Image from "next/image";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { fetchProductBySlug } from "@/lib/data/products";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { formatPrice, getEffectivePrice } from "@/lib/utils";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
+import { SetupBanner } from "@/components/shop/setup-banner";
 import type { Product } from "@/types/database";
 
 export async function generateMetadata({
@@ -11,13 +12,9 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("products")
-    .select("name")
-    .eq("slug", slug)
-    .single();
-  return { title: data ? `${data.name} | ECommer` : "Sản phẩm" };
+  if (!isSupabaseConfigured()) return { title: "Sản phẩm | ECommer" };
+  const { product } = await fetchProductBySlug(slug);
+  return { title: product ? `${product.name} | ECommer` : "Sản phẩm" };
 }
 
 export default async function ProductDetailPage({
@@ -26,14 +23,16 @@ export default async function ProductDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supabase = await createClient();
-  const { data: product } = await supabase
-    .from("products")
-    .select("*, product_images(*)")
-    .eq("slug", slug)
-    .eq("is_active", true)
-    .single();
 
+  if (!isSupabaseConfigured()) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <SetupBanner />
+      </div>
+    );
+  }
+
+  const { product, error } = await fetchProductBySlug(slug);
   if (!product) notFound();
 
   const p = product as Product;
@@ -42,15 +41,15 @@ export default async function ProductDetailPage({
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {error && <SetupBanner message={`Lỗi: ${error}`} />}
       <div className="grid gap-8 md:grid-cols-2">
         <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
           {images[0] ? (
-            <Image
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
               src={images[0].url}
               alt={p.name}
-              fill
-              className="object-cover"
-              priority
+              className="h-full w-full object-cover"
             />
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -74,7 +73,7 @@ export default async function ProductDetailPage({
             Còn {p.stock} sản phẩm
           </p>
           {p.description && (
-            <p className="mt-6 text-muted-foreground whitespace-pre-wrap">
+            <p className="mt-6 whitespace-pre-wrap text-muted-foreground">
               {p.description}
             </p>
           )}
