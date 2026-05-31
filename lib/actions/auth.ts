@@ -16,7 +16,9 @@ export async function signUp(formData: FormData) {
     options: { data: { full_name: fullName } },
   });
 
-  if (error) return { error: error.message };
+  if (error) {
+    redirect(`/register?error=${encodeURIComponent(error.message)}`);
+  }
   redirect("/login?registered=1");
 }
 
@@ -27,7 +29,9 @@ export async function signIn(formData: FormData) {
   const redirectTo = (formData.get("redirect") as string) || "/";
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { error: error.message };
+  if (error) {
+    redirect(`/login?error=${encodeURIComponent(error.message)}`);
+  }
 
   revalidatePath("/", "layout");
   redirect(redirectTo);
@@ -45,7 +49,7 @@ export async function updateProfile(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Chưa đăng nhập" };
+  if (!user) redirect("/login?redirect=/account");
 
   const { error } = await supabase
     .from("profiles")
@@ -56,7 +60,9 @@ export async function updateProfile(formData: FormData) {
     })
     .eq("id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) {
+    redirect(`/account?error=${encodeURIComponent(error.message)}`);
+  }
   revalidatePath("/account");
-  return { success: true };
+  redirect("/account?updated=1");
 }

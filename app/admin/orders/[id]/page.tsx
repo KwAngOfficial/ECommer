@@ -4,8 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { updateOrderStatusAction } from "@/lib/actions/admin-orders";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-
 export default async function AdminOrderDetailPage({
   params,
 }: {

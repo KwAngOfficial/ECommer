@@ -8,9 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ registered?: string; redirect?: string }>;
+  searchParams: Promise<{ registered?: string; redirect?: string; error?: string }>;
 }) {
-  const { registered, redirect } = await searchParams;
+  const { registered, redirect, error } = await searchParams;
 
   return (
     <Card>
@@ -20,6 +20,9 @@ export default async function LoginPage({
           <p className="text-center text-sm text-green-600">
             Đăng ký thành công! Vui lòng đăng nhập.
           </p>
+        )}
+        {error && (
+          <p className="text-center text-sm text-destructive">{error}</p>
         )}
       </CardHeader>
       <CardContent>

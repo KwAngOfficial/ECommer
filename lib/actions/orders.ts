@@ -5,6 +5,7 @@ import { generateOrderCode } from "@/lib/utils";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import type { PaymentMethod } from "@/types/database";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 const SHIPPING_FEE = 30000;
 
@@ -131,8 +132,12 @@ export async function updateOrderStatus(
     .update(updates)
     .eq("id", orderId);
 
-  if (error) return { error: error.message };
+  if (error) {
+    redirect(
+      `/admin/orders/${orderId}?error=${encodeURIComponent(error.message)}`
+    );
+  }
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
-  return { success: true };
+  redirect(`/admin/orders/${orderId}?updated=1`);
 }

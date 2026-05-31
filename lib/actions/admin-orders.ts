@@ -8,5 +8,5 @@ export async function updateOrderStatusAction(
 ) {
   const status = formData.get("status") as string;
   const paymentStatus = formData.get("payment_status") as string;
-  return updateOrderStatus(orderId, status, paymentStatus || undefined);
+  await updateOrderStatus(orderId, status, paymentStatus || undefined);
 }

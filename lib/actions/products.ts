@@ -32,7 +32,11 @@ export async function createProduct(formData: FormData) {
     .select()
     .single();
 
-  if (error) return { error: error.message };
+  if (error) {
+    redirect(
+      `/admin/products/new?error=${encodeURIComponent(error.message)}`
+    );
+  }
   revalidatePath("/admin/products");
   revalidatePath("/products");
   redirect(`/admin/products/${data.id}`);
@@ -55,24 +59,34 @@ export async function updateProduct(id: string, formData: FormData) {
     })
     .eq("id", id);
 
-  if (error) return { error: error.message };
+  if (error) {
+    redirect(
+      `/admin/products/${id}?error=${encodeURIComponent(error.message)}`
+    );
+  }
   revalidatePath("/admin/products");
   revalidatePath("/products");
-  return { success: true };
+  redirect(`/admin/products/${id}?updated=1`);
 }
 
 export async function deleteProduct(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("products").delete().eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    redirect(`/admin/products?error=${encodeURIComponent(error.message)}`);
+  }
   revalidatePath("/admin/products");
-  return { success: true };
+  redirect("/admin/products");
 }
 
 export async function uploadProductImage(productId: string, formData: FormData) {
   const supabase = await createClient();
   const file = formData.get("file") as File;
-  if (!file) return { error: "Không có file" };
+  if (!file) {
+    redirect(
+      `/admin/products/${productId}?error=${encodeURIComponent("Không có file")}`
+    );
+  }
 
   const ext = file.name.split(".").pop();
   const path = `${productId}/${Date.now()}.${ext}`;
@@ -81,7 +95,11 @@ export async function uploadProductImage(productId: string, formData: FormData) 
     .from("product-images")
     .upload(path, file);
 
-  if (uploadError) return { error: uploadError.message };
+  if (uploadError) {
+    redirect(
+      `/admin/products/${productId}?error=${encodeURIComponent(uploadError.message)}`
+    );
+  }
 
   const {
     data: { publicUrl },
@@ -93,9 +111,13 @@ export async function uploadProductImage(productId: string, formData: FormData) 
     sort_order: 0,
   });
 
-  if (error) return { error: error.message };
+  if (error) {
+    redirect(
+      `/admin/products/${productId}?error=${encodeURIComponent(error.message)}`
+    );
+  }
   revalidatePath(`/admin/products/${productId}`);
-  return { url: publicUrl };
+  redirect(`/admin/products/${productId}?uploaded=1`);
 }
 
 export async function createCategory(formData: FormData) {
@@ -106,15 +128,19 @@ export async function createCategory(formData: FormData) {
     slug: slugify(name),
     description: (formData.get("description") as string) || null,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    redirect(`/admin/categories?error=${encodeURIComponent(error.message)}`);
+  }
   revalidatePath("/admin/categories");
-  return { success: true };
+  redirect("/admin/categories");
 }
 
 export async function deleteCategory(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("categories").delete().eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    redirect(`/admin/categories?error=${encodeURIComponent(error.message)}`);
+  }
   revalidatePath("/admin/categories");
-  return { success: true };
+  redirect("/admin/categories");
 }
