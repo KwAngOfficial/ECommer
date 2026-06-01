@@ -9,6 +9,7 @@ import {
   paymentMethodLabels,
   paymentStatusLabels,
   getOrderStatusSteps,
+  type OrderStatusStep,
 } from "@/lib/order-labels";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,7 +52,10 @@ export default async function OrderDetailPage({
   if (!order) notFound();
 
   const o = order as Order;
-  const statusInfo = getOrderStatusSteps(o.status);
+  const isCancelled = o.status === "cancelled";
+  const orderSteps: OrderStatusStep[] = isCancelled
+    ? []
+    : getOrderStatusSteps(o.status).steps;
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-8">
@@ -78,7 +82,7 @@ export default async function OrderDetailPage({
         </Badge>
       </div>
 
-      {o.status === "cancelled" ? (
+      {isCancelled ? (
         <Card className="mb-6 border-destructive/30 bg-destructive/5">
           <CardContent className="flex items-center gap-3 pt-6">
             <X className="h-5 w-5 text-destructive" />
@@ -92,7 +96,7 @@ export default async function OrderDetailPage({
           </CardHeader>
           <CardContent>
             <ol className="space-y-4">
-              {statusInfo.steps.map((step) => (
+              {orderSteps.map((step) => (
                 <li key={step.key} className="flex items-center gap-3">
                   <span
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
