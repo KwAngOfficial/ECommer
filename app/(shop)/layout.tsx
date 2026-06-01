@@ -1,4 +1,4 @@
-import { ShopHeader } from "@/components/shop/header";
+import { ShopHeaderWithCategories } from "@/components/shop/shop-header";
 import { ShopFooter } from "@/components/shop/footer";
 
 export default function ShopLayout({
@@ -8,7 +8,7 @@ export default function ShopLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <ShopHeader />
+      <ShopHeaderWithCategories />
       <main className="flex-1">{children}</main>
       <ShopFooter />
     </div>

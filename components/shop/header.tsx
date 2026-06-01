@@ -4,11 +4,18 @@ import Link from "next/link";
 import { ShoppingCart, Search, User, Menu } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
 import { Button } from "@/components/ui/button";
+import { ProductsNav, type NavCategory } from "@/components/shop/products-nav";
 import { useState } from "react";
 
-export function ShopHeader() {
+interface ShopHeaderProps {
+  categories: NavCategory[];
+}
+
+export function ShopHeader({ categories }: ShopHeaderProps) {
   const totalItems = useCartStore((s) => s.totalItems());
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const closeMobile = () => setMobileOpen(false);
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -21,9 +28,7 @@ export function ShopHeader() {
           <Link href="/" className="text-sm font-medium hover:text-primary">
             Trang chủ
           </Link>
-          <Link href="/products" className="text-sm font-medium hover:text-primary">
-            Sản phẩm
-          </Link>
+          <ProductsNav categories={categories} />
           <Link href="/account" className="text-sm font-medium hover:text-primary">
             Tài khoản
           </Link>
@@ -55,6 +60,8 @@ export function ShopHeader() {
             size="icon"
             className="md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-expanded={mobileOpen}
+            aria-label="Menu"
           >
             <Menu className="h-5 w-5" />
           </Button>
@@ -64,9 +71,20 @@ export function ShopHeader() {
       {mobileOpen && (
         <nav className="border-t px-4 py-3 md:hidden">
           <div className="flex flex-col gap-3">
-            <Link href="/" onClick={() => setMobileOpen(false)}>Trang chủ</Link>
-            <Link href="/products" onClick={() => setMobileOpen(false)}>Sản phẩm</Link>
-            <Link href="/account" onClick={() => setMobileOpen(false)}>Tài khoản</Link>
+            <Link href="/" onClick={closeMobile}>
+              Trang chủ
+            </Link>
+            <div>
+              <p className="mb-2 font-medium">Sản phẩm</p>
+              <ProductsNav
+                categories={categories}
+                variant="mobile"
+                onNavigate={closeMobile}
+              />
+            </div>
+            <Link href="/account" onClick={closeMobile}>
+              Tài khoản
+            </Link>
           </div>
         </nav>
       )}

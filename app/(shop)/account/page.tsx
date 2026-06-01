@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { dynamic } from "@/lib/supabase/route-config";
 import { updateProfile } from "@/lib/actions/auth";
+import { SetupBanner } from "@/components/shop/setup-banner";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Order } from "@/types/database";
+
+export { dynamic };
 
 const statusLabels: Record<string, string> = {
   pending: "Chờ xác nhận",
@@ -19,6 +24,14 @@ const statusLabels: Record<string, string> = {
 };
 
 export default async function AccountPage() {
+  if (!isSupabaseConfigured()) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <SetupBanner />
+      </div>
+    );
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
