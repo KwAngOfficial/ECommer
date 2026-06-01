@@ -2,7 +2,7 @@
 
 import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCartStore } from "@/lib/cart-store";
+import { useAddToCart } from "@/lib/hooks/use-add-to-cart";
 import { useState } from "react";
 
 interface AddToCartButtonProps {
@@ -12,6 +12,7 @@ interface AddToCartButtonProps {
   slug: string;
   imageUrl?: string;
   disabled?: boolean;
+  className?: string;
 }
 
 export function AddToCartButton({
@@ -21,20 +22,27 @@ export function AddToCartButton({
   slug,
   imageUrl,
   disabled,
+  className,
 }: AddToCartButtonProps) {
-  const addItem = useCartStore((s) => s.addItem);
+  const addToCart = useAddToCart();
   const [added, setAdded] = useState(false);
 
   const handleClick = () => {
-    addItem({ productId, name, price, slug, imageUrl });
+    addToCart({ productId, name, price, slug, imageUrl });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
 
   return (
-    <Button size="lg" disabled={disabled} onClick={handleClick}>
+    <Button
+      type="button"
+      size="lg"
+      className={className}
+      disabled={disabled}
+      onClick={handleClick}
+    >
       <ShoppingCart className="mr-2 h-5 w-5" />
-      {added ? "Đã thêm!" : disabled ? "Hết hàng" : "Thêm vào giỏ hàng"}
+      {added ? "Đã thêm vào giỏ!" : disabled ? "Hết hàng" : "Thêm vào giỏ hàng"}
     </Button>
   );
 }

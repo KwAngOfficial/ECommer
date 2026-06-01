@@ -6,31 +6,34 @@ import type { CartItemLocal } from "@/types/database";
 
 interface CartStore {
   items: CartItemLocal[];
+  toastMessage: string | null;
   addItem: (item: Omit<CartItemLocal, "quantity">, qty?: number) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  totalItems: () => number;
-  totalPrice: () => number;
+  clearToast: () => void;
 }
 
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
+      toastMessage: null,
       addItem: (item, qty = 1) => {
         set((state) => {
           const existing = state.items.find((i) => i.productId === item.productId);
-          if (existing) {
-            return {
-              items: state.items.map((i) =>
+          const items = existing
+            ? state.items.map((i) =>
                 i.productId === item.productId
                   ? { ...i, quantity: i.quantity + qty }
                   : i
-              ),
-            };
-          }
-          return { items: [...state.items, { ...item, quantity: qty }] };
+              )
+            : [...state.items, { ...item, quantity: qty }];
+
+          return {
+            items,
+            toastMessage: `Đã thêm "${item.name}" vào giỏ hàng`,
+          };
         });
       },
       removeItem: (productId) => {
@@ -50,10 +53,19 @@ export const useCartStore = create<CartStore>()(
         }));
       },
       clearCart: () => set({ items: [] }),
-      totalItems: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
-      totalPrice: () =>
-        get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+      clearToast: () => set({ toastMessage: null }),
     }),
-    { name: "ecommer-cart" }
+    {
+      name: "ecommer-cart",
+      partialize: (state) => ({ items: state.items }),
+    }
   )
 );
+
+export function selectCartItemCount(state: CartStore): number {
+  return state.items.reduce((sum, i) => sum + i.quantity, 0);
+}
+
+export function selectCartTotal(state: CartStore): number {
+  return state.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+}

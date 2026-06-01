@@ -15,7 +15,11 @@ const SHIPPING_FEE = 30000;
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, totalPrice, clearCart } = useCartStore();
+  const items = useCartStore((s) => s.items);
+  const subtotalFromStore = useCartStore((s) =>
+    s.items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+  );
+  const clearCart = useCartStore((s) => s.clearCart);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
@@ -31,7 +35,7 @@ export default function CheckoutPage() {
     );
   }
 
-  const subtotal = totalPrice();
+  const subtotal = subtotalFromStore;
   const total = subtotal + SHIPPING_FEE;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

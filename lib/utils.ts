@@ -25,6 +25,15 @@ export function generateOrderCode(): string {
   return `DH${y}${m}${d}${rand}`;
 }
 
+export function isOnSale(price: number, salePrice: number | null): boolean {
+  return salePrice != null && Number(salePrice) < Number(price);
+}
+
+export function getDiscountPercent(price: number, salePrice: number): number {
+  if (price <= 0) return 0;
+  return Math.round(((price - salePrice) / price) * 100);
+}
+
 export function slugify(text: string): string {
   return text
     .toLowerCase()

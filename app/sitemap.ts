@@ -17,8 +17,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!isSupabaseConfigured()) return staticPages;
 
   try {
-    const { createClient } = await import("@/lib/supabase/server");
-    const supabase = await createClient();
+    const { createPublicClient } = await import("@/lib/supabase/public");
+    const supabase = createPublicClient();
+    if (!supabase) return staticPages;
     const { data: products } = await supabase
       .from("products")
       .select("slug, updated_at")

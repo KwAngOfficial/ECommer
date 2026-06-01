@@ -1,4 +1,6 @@
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { isOnSale } from "@/lib/utils";
 import type { Product } from "@/types/database";
 
 type FetchResult = {
@@ -11,8 +13,12 @@ export async function fetchActiveProducts(limit?: number): Promise<FetchResult> 
     return { products: [], error: "NOT_CONFIGURED" };
   }
 
+  const supabase = createPublicClient();
+  if (!supabase) {
+    return { products: [], error: "NOT_CONFIGURED" };
+  }
+
   try {
-    const supabase = await createClient();
     let query = supabase
       .from("products")
       .select("*, product_images(*)")
@@ -40,8 +46,12 @@ export async function fetchProductBySlug(slug: string) {
     return { product: null, error: "NOT_CONFIGURED" };
   }
 
+  const supabase = createPublicClient();
+  if (!supabase) {
+    return { product: null, error: "NOT_CONFIGURED" };
+  }
+
   try {
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
       .select("*, product_images(*)")
@@ -61,13 +71,44 @@ export async function fetchProductBySlug(slug: string) {
   }
 }
 
+export async function fetchHomeCatalog() {
+  const { products, error } = await fetchActiveProducts();
+  const { categories, error: catError } = await fetchCategories();
+
+  const saleProducts = products.filter((p) =>
+    isOnSale(p.price, p.sale_price)
+  );
+
+  const categorySections = categories
+    .map((category) => ({
+      category,
+      products: products
+        .filter((p) => p.category_id === category.id)
+        .slice(0, 8),
+    }))
+    .filter((section) => section.products.length > 0);
+
+  const uncategorized = products.filter((p) => !p.category_id).slice(0, 8);
+
+  return {
+    saleProducts,
+    categorySections,
+    uncategorized,
+    error: error || catError,
+  };
+}
+
 export async function fetchCategories() {
   if (!isSupabaseConfigured()) {
     return { categories: [], error: "NOT_CONFIGURED" };
   }
 
+  const supabase = createPublicClient();
+  if (!supabase) {
+    return { categories: [], error: "NOT_CONFIGURED" };
+  }
+
   try {
-    const supabase = await createClient();
     const { data, error } = await supabase.from("categories").select("*").order("name");
     if (error) return { categories: [], error: error.message };
     return { categories: data ?? [], error: null };

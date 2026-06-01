@@ -3,12 +3,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
-import { useCartStore } from "@/lib/cart-store";
+import { useCartStore, selectCartTotal } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 export default function CartPage() {
-  const { items, updateQuantity, removeItem, totalPrice } = useCartStore();
+  const items = useCartStore((s) => s.items);
+  const updateQuantity = useCartStore((s) => s.updateQuantity);
+  const removeItem = useCartStore((s) => s.removeItem);
+  const subtotal = useCartStore(selectCartTotal);
 
   if (items.length === 0) {
     return (
@@ -23,11 +26,11 @@ export default function CartPage() {
   }
 
   const shipping = 30000;
-  const total = totalPrice() + shipping;
+  const total = subtotal + shipping;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="mb-8 text-3xl font-bold">Giỏ hàng</h1>
+    <div className="container mx-auto max-w-5xl px-4 py-8">
+      <h1 className="mb-8 text-3xl font-bold text-slate-900">Giỏ hàng</h1>
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-4">
           {items.map((item) => (
@@ -85,7 +88,7 @@ export default function CartPage() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span>Tạm tính</span>
-              <span>{formatPrice(totalPrice())}</span>
+              <span>{formatPrice(subtotal)}</span>
             </div>
             <div className="flex justify-between">
               <span>Phí vận chuyển</span>

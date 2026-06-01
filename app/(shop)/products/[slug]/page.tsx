@@ -40,10 +40,10 @@ export default async function ProductDetailPage({
   const images = p.product_images || [];
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto max-w-5xl px-4 py-8">
       {error && <SetupBanner message={`Lỗi: ${error}`} />}
-      <div className="grid gap-8 md:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
+      <div className="grid gap-10 rounded-2xl border bg-white p-6 shadow-sm md:grid-cols-2 md:p-8">
+        <div className="relative aspect-square overflow-hidden rounded-2xl bg-slate-100">
           {images[0] ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
