@@ -20,21 +20,34 @@ export const paymentStatusLabels: Record<string, string> = {
   refunded: "Đã hoàn tiền",
 };
 
-export function getOrderStatusSteps(current: string) {
-  const steps = [
+export type OrderStatusStep = {
+  key: string;
+  label: string;
+  done: boolean;
+  active: boolean;
+};
+
+export function getOrderStatusSteps(current: string): {
+  cancelled: boolean;
+  steps: OrderStatusStep[];
+} {
+  const baseSteps = [
     { key: "pending", label: orderStatusLabels.pending },
     { key: "confirmed", label: orderStatusLabels.confirmed },
     { key: "shipping", label: orderStatusLabels.shipping },
     { key: "delivered", label: orderStatusLabels.delivered },
   ];
+
   if (current === "cancelled") {
-    return { cancelled: true, steps: [] as typeof steps };
+    return { cancelled: true, steps: [] };
   }
+
   const order = ["pending", "confirmed", "shipping", "delivered"];
-  const currentIndex = order.indexOf(current);
+  const currentIndex = Math.max(0, order.indexOf(current));
+
   return {
     cancelled: false,
-    steps: steps.map((s, i) => ({
+    steps: baseSteps.map((s, i) => ({
       ...s,
       done: i <= currentIndex,
       active: i === currentIndex,
