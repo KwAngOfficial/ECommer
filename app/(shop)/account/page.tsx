@@ -11,17 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { orderStatusLabels } from "@/lib/order-labels";
 import type { Order } from "@/types/database";
+import { ChevronRight } from "lucide-react";
 
 export { dynamic };
-
-const statusLabels: Record<string, string> = {
-  pending: "Chờ xác nhận",
-  confirmed: "Đã xác nhận",
-  shipping: "Đang giao",
-  delivered: "Đã giao",
-  cancelled: "Đã hủy",
-};
 
 export default async function AccountPage() {
   if (!isSupabaseConfigured()) {
@@ -102,22 +96,33 @@ export default async function AccountPage() {
           ) : (
             <div className="space-y-4">
               {(orders as Order[]).map((order) => (
-                <Card key={order.id}>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{order.order_code}</span>
-                      <Badge variant="secondary">
-                        {statusLabels[order.status] || order.status}
-                      </Badge>
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {new Date(order.created_at).toLocaleDateString("vi-VN")}
-                    </p>
-                    <p className="mt-2 font-semibold text-primary">
-                      {formatPrice(order.total)}
-                    </p>
-                  </CardContent>
-                </Card>
+                <Link key={order.id} href={`/account/orders/${order.id}`}>
+                  <Card className="transition-shadow hover:shadow-md">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium">{order.order_code}</span>
+                        <Badge variant="secondary">
+                          {orderStatusLabels[order.status] || order.status}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {new Date(order.created_at).toLocaleDateString("vi-VN")}
+                        {order.order_items && order.order_items.length > 0 && (
+                          <> · {order.order_items.length} sản phẩm</>
+                        )}
+                      </p>
+                      <div className="mt-3 flex items-center justify-between">
+                        <p className="font-semibold text-primary">
+                          {formatPrice(order.total)}
+                        </p>
+                        <span className="flex items-center text-sm text-primary">
+                          Xem chi tiết
+                          <ChevronRight className="ml-1 h-4 w-4" />
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}
