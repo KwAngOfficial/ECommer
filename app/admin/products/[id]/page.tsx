@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
-import { updateProduct, uploadProductImage } from "@/lib/actions/products";
+import { updateProduct } from "@/lib/actions/products";
+import { ProductImageUpload } from "@/components/admin/product-image-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,10 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 
 export default async function EditProductPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string; updated?: string }>;
 }) {
   const { id } = await params;
+  const { error, updated } = await searchParams;
   const supabase = await createClient();
 
   const { data: product } = await supabase
@@ -26,7 +29,6 @@ export default async function EditProductPage({
 
   const { data: categories } = await supabase.from("categories").select("*");
   const updateWithId = updateProduct.bind(null, id);
-  const uploadWithId = uploadProductImage.bind(null, id);
 
   return (
     <div>
@@ -36,6 +38,17 @@ export default async function EditProductPage({
         </Button>
         <h1 className="text-3xl font-bold">Sửa: {product.name}</h1>
       </div>
+
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      {updated && (
+        <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          Đã lưu thay đổi sản phẩm.
+        </div>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-2">
         <form action={updateWithId} className="space-y-4">
@@ -90,19 +103,25 @@ export default async function EditProductPage({
         </form>
 
         <div>
-          <h2 className="font-semibold mb-4">Ảnh sản phẩm</h2>
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            {product.product_images?.map((img: { id: string; url: string }) => (
-              <div key={img.id} className="relative aspect-square rounded overflow-hidden bg-muted">
-                <Image src={img.url} alt="" fill className="object-cover" />
-              </div>
-            ))}
+          <h2 className="mb-4 font-semibold">Ảnh sản phẩm</h2>
+          <div className="mb-4 grid grid-cols-3 gap-2">
+            {product.product_images?.length ? (
+              product.product_images.map((img: { id: string; url: string }) => (
+                <div
+                  key={img.id}
+                  className="relative aspect-square overflow-hidden rounded-lg bg-muted"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={img.url} alt="" className="h-full w-full object-cover" />
+                </div>
+              ))
+            ) : (
+              <p className="col-span-3 text-sm text-muted-foreground">
+                Chưa có ảnh. Upload bên dưới.
+              </p>
+            )}
           </div>
-          <form action={uploadWithId} className="space-y-2">
-            <Label htmlFor="file">Upload ảnh mới</Label>
-            <Input id="file" name="file" type="file" accept="image/*" required />
-            <Button type="submit" variant="outline">Upload</Button>
-          </form>
+          <ProductImageUpload productId={id} />
         </div>
       </div>
     </div>
